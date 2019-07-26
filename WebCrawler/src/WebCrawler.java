@@ -16,6 +16,7 @@ public class WebCrawler extends JFrame {
     JButton button;
     JTextField urlInput;
     String LINE_SEPARATOR;
+    JLabel title;
 
     public WebCrawler() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -27,11 +28,17 @@ public class WebCrawler extends JFrame {
         JTextArea center = new JTextArea();
         add(center);
         center.setName("HtmlTextArea");
-        center.setBounds(10,35, 550,550);
+        center.setBounds(10,75, 550,550);
         center.setEnabled(false);
         center.setVisible(true);
         center.setForeground(Color.BLACK);
         LINE_SEPARATOR = System.getProperty("line.separator");
+
+        title = new JLabel();
+        add(title);
+        title.setName("TitleLabel");
+        title.setBounds(10,35,550,20);
+        title.setText("Title: ");
 
         button = new JButton("Get text!");
         add(button);
@@ -40,7 +47,7 @@ public class WebCrawler extends JFrame {
         button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                downloadSource(center);
+                downloadSource(center, title);
             }
         });
 
@@ -51,11 +58,12 @@ public class WebCrawler extends JFrame {
 
     }
 
-    public void downloadSource(JTextArea out) {
+    public void downloadSource(JTextArea out, JLabel title) {
         final String url = urlInput.getText()/* Get url from JTextField */;
 
         final InputStream inputStream;
         final StringBuilder stringBuilder = new StringBuilder();
+        String webTitle = "";
         try {
             inputStream = new URL(url).openStream();
             final BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
@@ -71,6 +79,10 @@ public class WebCrawler extends JFrame {
         }
 
         final String siteText = stringBuilder.toString();
+        int start = siteText.indexOf("<title>");
+        int end = siteText.indexOf("</",start);
+        webTitle = siteText.substring(start + 7, end);
         out.setText(siteText);
+        title.setText(webTitle);
     }
 }
