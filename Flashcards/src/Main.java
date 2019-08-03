@@ -14,6 +14,24 @@ public class Main {
     static List<String> log = new ArrayList<>();
 
     public static void main(String[] args) {
+        String exportFile = null;
+        if (args != null && args.length > 1) {
+            if ("-import".equals(args[0])) {
+                importFile(args[1]);
+                if (args.length > 3 && "-export".equals(args[2])) {
+                    exportFile = args[3];
+                }
+            } else if ("-export".equals(args[0])) {
+                exportFile = args[1];
+            }
+        }
+        run();
+        if (exportFile != null) {
+            exportFile(exportFile);
+        }
+    }
+
+    static void run() {
         while (true) {
             print("Input the action (add, remove, import, export, ask, exit, log, hardest card, reset stats):");
             String action = read();
@@ -28,10 +46,14 @@ public class Main {
                     askCard();
                     break;
                 case "import":
-                    importFile();
+                    print("File name:");
+                    String fileName = read();
+                    importFile(fileName);
                     break;
                 case "export":
-                    exportFile();
+                    print("File name:");
+                    fileName = read();
+                    exportFile(fileName);
                     break;
                 case "log":
                     log();
@@ -47,7 +69,6 @@ public class Main {
                     return;
             }
         }
-
     }
     static void log() {
         print("File name:");
@@ -136,9 +157,7 @@ public class Main {
         }
     }
 
-    static void exportFile() {
-        print("File name:");
-        String fileName = read();
+    static void exportFile(String fileName) {
         int count = defToSol.size();
         try {
             File file = new File(fileName);
@@ -156,9 +175,7 @@ public class Main {
         print(String.format("%d cards have been saved.", count));
     }
 
-    static void importFile() {
-        print("File name:");
-        String fileName = read();
+    static void importFile(String fileName) {
         int count = 0;
         try {
             File file = new File(fileName);
