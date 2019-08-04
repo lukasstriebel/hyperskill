@@ -10,21 +10,25 @@ import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Vector;
 
-public class WebCrawler extends JFrame {
+public class WebCrawlerMultiThread extends JFrame {
     JTextArea center;
-    JButton button;
+    JToggleButton button;
     JButton export;
     JTextField urlInput;
     JTextField exportFileName;
+    JTextField depth;
     String LINE_SEPARATOR;
-    JLabel title;
-    JTable table;
+    JLabel parsed;
+    JCheckBox enabled;
+    List<String[]> sites = new ArrayList<>();
 
-    public WebCrawler() {
+    public WebCrawlerMultiThread() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(700, 800);
+        setSize(700, 300);
         setVisible(true);
         setTitle("Simple Window");
         getContentPane().setLayout(null);
@@ -37,28 +41,20 @@ public class WebCrawler extends JFrame {
         center.setVisible(true);
         center.setForeground(Color.BLACK);
 
-        title = new JLabel();
-        add(title);
-        title.setName("TitleLabel");
-        title.setBounds(10,35,550,20);
-        title.setText("Title: ");
+        parsed = new JLabel();
+        add(parsed);
+        parsed.setName("ParsedLabel");
+        parsed.setBounds(10,35,550,20);
+        parsed.setText("Parsed Pages: ");
 
-        Object[] column = {"URL","Title"};
-        table = new JTable(new DefaultTableModel(column, 0));
-        table.setName("TitlesTable");
-        table.setEnabled(false);
-        JScrollPane pane = new JScrollPane(table);
-        pane.setBounds(10,75, 550,550);
-        add(pane);
-
-        button = new JButton("Get text!");
+        button = new JToggleButton("Run");
         add(button);
         button.setName("RunButton");
         button.setBounds(570,10,100,40);
         button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                downloadSource(table, title);
+                downloadSource();
             }
         });
 
@@ -70,32 +66,40 @@ public class WebCrawler extends JFrame {
         export = new JButton("Save");
         add(export);
         export.setName("ExportButton");
-        export.setBounds(570,650,100,40);
+        export.setBounds(570,150,100,40);
         export.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                exportTable(table);
+                exportTable();
             }
         });
+
+        enabled = new JCheckBox();
+        add(enabled);
+        enabled.setName("DepthCheckBox");
+        enabled.setBounds(10, 70, 20, 20);
 
         exportFileName = new JTextField();
         add(exportFileName);
         exportFileName.setName("ExportUrlTextField");
-        exportFileName.setBounds(10,650,550,20);
+        exportFileName.setBounds(10,150,550,20);
+
+        depth = new JTextField();
+        add(depth);
+        depth.setName("DepthTextField");
+        depth.setBounds(10,100,550,20);
 
         LINE_SEPARATOR = System.getProperty("line.separator");
     }
 
-    public void exportTable(JTable out) {
-        DefaultTableModel model = (DefaultTableModel) table.getModel();
-
+    public void exportTable() {
         String fileName = exportFileName.getText();
         try {
             File file = new File(fileName);
             FileWriter writer = new FileWriter(file);
-            for (Vector v : model.getDataVector()) {
-                writer.write(v.get(0).toString() + "\n");
-                writer.write(v.get(1).toString() + "\n");
+            for (String[] website : sites) {
+                writer.write(website[0] + "\n");
+                writer.write(website[1] + "\n");
             }
             writer.flush();
             writer.close();
@@ -103,10 +107,8 @@ public class WebCrawler extends JFrame {
             e.printStackTrace();
         }
     }
-    public void downloadSource(JTable out, JLabel title) {
+    public void downloadSource() {
         final String url = urlInput.getText()/* Get url from JTextField */;
-        DefaultTableModel model = (DefaultTableModel) table.getModel();
-        model.setNumRows(0);
         final InputStream inputStream;
         final StringBuilder stringBuilder = new StringBuilder();
         String webTitle = "";
@@ -128,7 +130,7 @@ public class WebCrawler extends JFrame {
         int start = siteText.indexOf("<title>");
         int end = siteText.indexOf("</",start);
         webTitle = siteText.substring(start + 7, end);
-        title.setText(webTitle);
+        sites.add(new String[] {url, webTitle});
 
         start = siteText.indexOf("href=\"", 0);
         try {
@@ -146,7 +148,7 @@ public class WebCrawler extends JFrame {
                 System.out.println(connection.getContentType());
                 if (connection.getContentType().startsWith("text/html")) {
                     String linkTitle = extractTitle(connection);
-                    model.addRow(new Object[]{urlLink, linkTitle});
+                    sites.add(new String[]{urlLink, linkTitle});
                 }
                 start = siteText.indexOf("href=", start+6);
             }
